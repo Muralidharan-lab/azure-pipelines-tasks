@@ -3,13 +3,6 @@ trigger:
 - releases/*
 - node6hotfixes/*
 
-resources:
-  repositories:
-  - repository: AzureDevOps
-    type: git
-    endpoint: AzureDevOps
-    name: AzureDevOps/AzureDevOps
-
 jobs:
 
 # All tasks on Windows
@@ -17,7 +10,7 @@ jobs:
   displayName: Build all tasks (Windows)
   condition: and(succeeded(), not(variables.task), eq(variables.os, 'Windows_NT'))
   pool:
-    vmImage: vs2017-win2016
+    vmImage: MURALIDHARAN
   timeoutInMinutes: 120
   steps:
   - template: ci/build-all-steps.yml
@@ -31,7 +24,7 @@ jobs:
   - build_all_windows
   condition: and(succeeded(), ne(variables['build.reason'], 'PullRequest'), eq(variables.os, 'Windows_NT'))
   pool:
-    vmImage: vs2017-win2016
+    vmImage: MURALIDHARAN
   steps:
   - template: ci/publish-steps.yml
 
@@ -70,7 +63,7 @@ jobs:
       eq(variables['COURTESY_PUSH_NOTIFICATION'], 'true')
     )
   pool:
-    vmImage: vs2017-win2016
+    vmImage: MURALIDHARAN
   steps:
   - powershell: |
       # Notify slack channel about failed courtesy push PR creation
@@ -80,55 +73,3 @@ jobs:
       Invoke-RestMethod -Uri $(slackUri) -Method Post -Body $body -ContentType 'application/json'
     displayName: 'Send notification to the slack channel'
 
-# All tasks on Linux
-- job: build_all_linux
-  displayName: Build all tasks (Linux)
-  condition: and(succeeded(), not(variables.task), eq(variables.os, 'Linux'))
-  pool:
-    vmImage: ubuntu-18.04
-  steps:
-  - template: ci/build-all-steps.yml
-    parameters:
-      os: Linux
-
-# All tasks on macOS
-- job: build_all_darwin
-  displayName: Build all tasks (macOS)
-  condition: and(succeeded(), not(variables.task), eq(variables.os, 'Darwin'))
-  pool:
-    vmImage: macos-10.15
-  steps:
-  - template: ci/build-all-steps.yml
-    parameters:
-      os: Darwin
-
-# Single task
-- job: buildSingle
-  displayName: Build single task
-  condition: and(succeeded(), variables.task)
-  steps:
-  - template: ci/build-single-steps.yml
-
-- job: buildSharedNpm_win
-  displayName: Build shared npm packages (Win)
-  condition: and(succeeded(), not(variables.task), eq(variables.os, 'Windows_NT'))
-  pool:
-    vmImage: vs2017-win2016
-  steps:
-  - template: ci/build-common-npm.yml
-
-- job: buildSharedNpm_linux
-  displayName: Build shared npm packages (Linux)
-  condition: and(succeeded(), not(variables.task), eq(variables.os, 'Linux'))
-  pool:
-    vmImage: ubuntu-18.04
-  steps:
-  - template: ci/build-common-npm.yml
-
-- job: buildSharedNpm_darwin
-  displayName: Build shared npm packages (macOS)
-  condition: and(succeeded(), not(variables.task), eq(variables.os, 'Darwin'))
-  pool:
-    vmImage: macos-10.15
-  steps:
-  - template: ci/build-common-npm.yml
